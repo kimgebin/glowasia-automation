@@ -1,362 +1,193 @@
-# GLOWASIA Copilot - Credentials Management
-
-## Table of Contents
-1. [Overview](#overview)
-2. [How Credentials Work](#how-credentials-work)
-3. [Supported Platforms](#supported-platforms)
-4. [Adding Credentials](#adding-credentials)
-5. [Managing Credentials](#managing-credentials)
-6. [Security Best Practices](#security-best-practices)
-7. [Backup & Restore](#backup--restore)
-8. [Troubleshooting](#troubleshooting)
-
----
+# Credentials Management
 
 ## Overview
 
-GLOWASIA Copilot uses a **persistent credentials database** that stores all your API keys, tokens, and sensitive information securely on your local machine. This database survives app updates - you never need to re-enter credentials when updating the application.
+GLOWASIA Copilot stores all credentials in a local SQLite database that persists across app updates. This means your API keys and tokens remain safe even when you update or reinstall the application.
 
-### Key Features
-
-- ✅ **Persistent Storage**: Credentials survive app updates
-- ✅ **Local Encryption**: All data stored locally in SQLite
-- ✅ **Platform Support**: 10+ platforms supported
-- ✅ **Multiple Accounts**: Multiple accounts per platform
-- ✅ **Export/Import**: Backup and restore functionality
-- ✅ **Secure Delete**: Securely remove credentials when needed
-
----
-
-## How Credentials Work
-
-### Database Location
+## Database Location
 
 ```
-~/.local/share/glowasia-automation/
-├── credentials.db    ← All API keys & tokens (PERSISTENT)
-├── app_state.json    ← App settings
-└── logs/
-    └── activity.log
+~/.local/share/glowasia-automation/credentials.db
 ```
 
-### Data Structure
-
-Each credential entry stores:
-
-| Field | Description |
-|-------|-------------|
-| `platform` | Platform name (shopify, cj_dropshipping, etc.) |
-| `account_name` | Friendly name for this account |
-| `api_key` | Primary API key or username |
-| `api_secret` | API secret or password |
-| `access_token` | OAuth access token (if applicable) |
-| `refresh_token` | OAuth refresh token (if applicable) |
-| `shop_url` | Store URL for Shopify-style platforms |
-| `additional_data` | JSON blob for platform-specific data |
-| `created_at` | When credential was added |
-| `updated_at` | Last modification time |
-
-### Persistence Guarantee
-
-The credentials database is stored in your user's local directory, NOT inside the application bundle. This means:
-
-1. **App Updates**: Updating the app does NOT affect credentials
-2. **App Reinstall**: Reinstalling the app does NOT affect credentials
-3. **App Delete**: Deleting the app does NOT affect credentials
-4. **System Upgrades**: macOS upgrades do NOT affect credentials
+The database file is stored in the user's local application data directory, which:
+- Persists across app updates
+- Survives app reinstalls
+- Is protected by macOS file permissions
+- Is specific to your user account
 
 ---
 
 ## Supported Platforms
 
-| Platform | Credential Type | Fields Required |
-|----------|----------------|-----------------|
-| Shopify | OAuth/API Token | api_key, shop_url |
-| Shopee | Partner API | partner_id, partner_key, shop_id |
-| Lazada | API Gateway | api_key, api_secret, shop_url |
-| Tokopedia | OAuth | access_token, shop_id |
-| TikTok Shop | API Token | api_key, shop_id |
-| CJ Dropshipping | Affiliate Token | api_key, api_secret |
-| Telegram | Bot Token | bot_token, chat_id |
-| Google Sheets | Sheet ID | sheet_id |
-| Midtrans | Server Key | server_key, client_key |
-| GitHub | Personal Token | access_token |
+| Platform | Required Fields |
+|----------|----------------|
+| Shopify | API Key, Shop URL |
+| Shopee | Partner ID, Partner Key, Shop ID |
+| Lazada | API Key, Secret, User ID |
+| Tokopedia | Client ID, Client Secret |
+| TikTok Shop | App Key, App Secret |
+| Telegram | Bot Token, Chat ID |
+| CJ Dropshipping | API Key, Secret |
+| Google Sheets | Service Account Email, Private Key, Spreadsheet ID |
+| Midtrans | Server Key, Client Key |
 
 ---
 
 ## Adding Credentials
 
-### Via Settings UI (Recommended)
+### Step-by-Step Guide
 
-#### Step 1: Open Settings
+1. **Open Settings**
+   - Click the ⚙️ icon in the sidebar
+   - Or use keyboard shortcut `Cmd +,`
 
-1. Click the **Settings** (⚙️) icon in the sidebar
-2. Or press **⌘ + ,**
+2. **Navigate to Credentials Tab**
+   - Click the 🔐 icon in the settings panel
 
-#### Step 2: Navigate to Credentials
+3. **Add New Credential**
+   - Click "Add New" button
+   - Select platform from dropdown
+   - Fill in required fields
+   - Click "Save"
 
-1. Click the **Credentials** (🔐) tab
-2. You'll see a list of platforms
+### Field Validation
 
-#### Step 3: Add New Credential
-
-1. Click the **+** button or "Add Credential"
-2. Select the **Platform** from dropdown
-3. Enter an **Account Name** (e.g., "My Shopify Store")
-4. Fill in the required fields
-5. Click **Save**
-
-#### Step 4: Verify
-
-1. Click **Test Connection** next to the credential
-2. Green checkmark = Success
-3. Red X = Check credentials
+Each platform validates its fields differently:
+- **Shopify**: Validates shop URL format (must end in .myshopify.com or .shopify.com)
+- **Shopee**: Validates Partner ID is numeric
+- **Telegram**: Validates bot token format (must contain `:`)
+- **API Keys**: Validates minimum length requirements
 
 ---
 
-### Via Import (Advanced)
+## Editing Credentials
 
-You can import credentials from a JSON backup file.
+1. Go to Settings → Credentials
+2. Click on the credential entry you want to edit
+3. Modify the fields
+4. Click "Save" to update
 
-#### JSON Format
+---
 
-```json
-{
-  "version": 1,
-  "credentials": [
-    {
-      "platform": "shopify",
-      "account_name": "My Store",
-      "api_key": "shpat_xxxxx",
-      "shop_url": "mystore.myshopify.com"
-    },
-    {
-      "platform": "telegram",
-      "account_name": "Main Bot",
-      "api_key": "123456:ABCdef",
-      "additional_data": {
-        "chat_id": "123456789"
-      }
-    }
-  ]
-}
-```
+## Deleting Credentials
 
-#### Import Steps
+1. Go to Settings → Credentials
+2. Click the trash icon next to the credential
+3. Confirm deletion
+4. Credential is permanently removed
 
-1. Settings → Credentials tab
-2. Click **Import** button
-3. Select your `.json` backup file
+**Warning**: Deleting credentials cannot be undone. Make sure to export a backup first if you might need these credentials again.
+
+---
+
+## Export/Import
+
+### Why Export?
+
+- Backup credentials before reinstalling macOS
+- Transfer credentials to a new computer
+- Keep a secure copy of all API keys
+- Migrate to a new installation
+
+### Export Backup
+
+1. Go to Settings → Credentials
+2. Click "Export Backup"
+3. Choose save location
+4. Save as JSON file
+
+**Important**: Export files are unencrypted. Keep them safe and secure.
+
+### Import Backup
+
+1. Go to Settings → Credentials
+2. Click "Import Backup"
+3. Select JSON file
 4. Confirm import
-5. All credentials are added
 
----
-
-## Managing Credentials
-
-### Editing Credentials
-
-1. Go to Settings → Credentials
-2. Click on the credential entry
-3. Modify fields
-4. Click **Save**
-
-### Deleting Credentials
-
-#### Normal Delete
-
-1. Go to Settings → Credentials
-2. Hover over credential entry
-3. Click **Delete** (trash icon)
-4. Confirm deletion
-
-#### Secure Delete (Recommended when selling device)
-
-1. Go to Settings → Credentials
-2. Hover over credential entry
-3. Click **Delete** while holding **⌘ + ⇧**
-4. Confirm secure deletion
-5. Credential is overwritten before deletion
-
-### Multiple Accounts
-
-You can add multiple accounts for the same platform:
-
-1. Go to Settings → Credentials
-2. Click **Add** with a different account name
-3. Each account is listed separately
-4. Select which account to use for automation
+**Note**: Importing will merge with existing credentials. If a platform credential already exists, it will be updated with the imported data.
 
 ---
 
 ## Security Best Practices
 
-### 🔒 Essential Rules
+### 🔐 Local Storage
 
-1. **Never share credentials** with anyone
-2. **Use separate accounts** for development and production
-3. **Enable 2FA** on all platform accounts
-4. **Regularly rotate** API keys and tokens
-5. **Export backups** after adding new credentials
+- Credentials are stored locally only
+- Never uploaded to external servers
+- Protected by macOS file permissions
+- Each platform only receives its own required authentication data
 
-### 🔑 Credential Storage
+### ✅ Recommended Practices
 
-- All credentials are stored locally in `credentials.db`
-- The database is NOT encrypted at rest (standard SQLite)
-- Physical access to your device = access to credentials
-- Always use screen lock when leaving device unattended
+1. **Never share credentials** with anyone, including support personnel
+2. **Use separate accounts** for development and production environments
+3. **Regularly export backups** and store them securely
+4. **Delete old credentials** for platforms you no longer use
+5. **Rotate API keys** periodically (every 3-6 months)
 
-### 📤 Sharing Guidelines
+### 🚫 What NOT to Do
 
-**NEVER share:**
-- API keys or tokens
-- Database files (`credentials.db`)
-- Export JSON files containing credentials
-
-**SAFE to share:**
-- Screenshots of the dashboard (no credentials visible)
-- Anonymous error messages
-- Feature suggestions
-
----
-
-## Backup & Restore
-
-### Exporting Credentials
-
-#### When to Export
-
-- Before updating the app
-- After adding new credentials
-- Weekly/monthly routine
-
-#### How to Export
-
-1. Go to Settings → Credentials
-2. Click **Export** button
-3. Choose save location
-4. File is saved as `glowasia-credentials-backup-YYYY-MM-DD.json`
-
-#### What Gets Exported
-
-```json
-{
-  "version": 1,
-  "exported_at": "2026-04-22T04:00:00Z",
-  "credentials": [
-    {
-      "platform": "shopify",
-      "account_name": "My Store",
-      "api_key": "shpat_xxxxx",
-      "shop_url": "mystore.myshopify.com",
-      "additional_data": {}
-    }
-  ]
-}
-```
-
-### Importing Credentials
-
-1. Go to Settings → Credentials
-2. Click **Import** button
-3. Select backup `.json` file
-4. Review credentials to import
-5. Click **Confirm Import**
-6. Existing credentials are merged (duplicates skipped)
-
-### Restoring After Fresh Install
-
-1. Install the new version of GLOWASIA Copilot
-2. Launch the app
-3. Go to Settings → Credentials
-4. Click **Import**
-5. Select your backup file
-6. All credentials are restored
+- Don't email credentials to anyone
+- Don't share screenshots of credential fields
+- Don't store credentials in plain text files
+- Don't use the same API key across multiple applications
 
 ---
 
 ## Troubleshooting
 
-### Credentials Not Saving
+### Credential Not Saving
 
-**Symptoms**: Click save but credentials don't persist
-
-**Solutions**:
+**Solutions:**
 1. Check write permissions for `~/.local/share/glowasia-automation/`
 2. Ensure no other instance of the app is running
-3. Try deleting `credentials.db` and re-adding (backup first!)
-4. Restart the app
+3. Try deleting the database file and re-adding credentials
+4. Check available disk space
 
-### Connection Test Fails
+### Connection Failed After Adding Credentials
 
-**Symptoms**: Test Connection returns red X
+**Solutions:**
+1. Verify credentials are correct (no typos)
+2. Check if platform API is down (status pages)
+3. Try re-adding credentials
+4. For Shopify: Ensure API token hasn't expired
+5. Check internet connection
 
-**Solutions**:
-1. Verify credentials are correct (check for typos)
-2. Check internet connection
-3. Verify platform API is operational
-4. Try re-generating API keys on the platform
-5. Check if platform requires API whitelist update
+### Export File Corrupted
 
-### Duplicate Credentials
-
-**Symptoms**: Same platform shows multiple times
-
-**Solutions**:
-1. Go to Settings → Credentials
-2. Identify duplicate entries
-3. Delete extras (keep most recent)
-4. Use account names to differentiate
-
-### Lost Credentials
-
-**Symptoms**: Forgot credentials, need to retrieve
-
-**Solutions**:
-1. Check if you have a backup file
-2. Retrieve from platform dashboard (Shopify, CJ, etc.)
-3. Generate new API keys if needed
-4. Re-add to GLOWASIA Copilot
+**Solutions:**
+1. Try re-exporting the file
+2. Use the most recent backup
+3. Manually re-enter credentials if backup is unavailable
 
 ---
 
-## Database Details
+## Database Schema
 
-### Schema
+The credentials database uses the following structure:
 
 ```sql
+-- credentials table
 CREATE TABLE credentials (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id TEXT PRIMARY KEY,
     platform TEXT NOT NULL,
-    account_name TEXT,
-    api_key TEXT,
-    api_secret TEXT,
-    access_token TEXT,
-    refresh_token TEXT,
-    shop_url TEXT,
-    additional_data TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(platform, account_name)
+    name TEXT,
+    data TEXT NOT NULL, -- JSON encrypted credentials
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+);
+
+-- app_state table
+CREATE TABLE app_state (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
 );
 ```
 
-### Direct Database Access
-
-**For debugging only** - DO NOT modify directly:
-
-```bash
-# View database
-sqlite3 ~/.local/share/glowasia-automation/credentials.db "SELECT * FROM credentials;"
-
-# Backup database
-cp ~/.local/share/glowasia-automation/credentials.db ~/Desktop/credentials-backup.db
-```
+All credential data is stored in the `data` column as encrypted JSON.
 
 ---
 
-## Need Help?
-
-1. Check [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for common issues
-2. Check existing [GitHub Issues](https://github.com/kimgebin/glowasia-automation/issues)
-3. Create a new issue with details
+*For setup guides for each platform, see [SETUP.md](SETUP.md)*

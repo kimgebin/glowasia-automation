@@ -3,323 +3,265 @@
 ## Table of Contents
 1. [Prerequisites](#prerequisites)
 2. [Installation](#installation)
-3. [First-Time Setup](#first-time-setup)
-4. [Platform Configuration](#platform-configuration)
-5. [Verification](#verification)
-6. [Next Steps](#next-steps)
+3. [Initial Configuration](#initial-configuration)
+4. [Platform Setup](#platform-setup)
+5. [Testing](#testing)
 
 ---
 
 ## Prerequisites
 
 ### System Requirements
-
-| Requirement | Minimum | Recommended |
-|-------------|---------|-------------|
-| macOS Version | 10.15 (Catalina) | 12 (Monterey) or later |
-| RAM | 4 GB | 8 GB |
-| Free Storage | 500 MB | 1 GB |
-| Display | 1280x720 | 1920x1080 |
-| Internet | Stable broadband | Stable broadband |
+- macOS 10.15 (Catalina) or later
+- 4GB RAM minimum (8GB recommended)
+- 500MB free disk space
+- Internet connection
 
 ### Required Accounts
-
-Before setting up GLOWASIA Copilot, ensure you have accounts ready for:
-
-- [ ] **Shopify Store** - Your main e-commerce store
-- [ ] **CJ Dropshipping Account** - For product sourcing and fulfillment
-- [ ] **Google Account** - For Google Sheets integration
-- [ ] **Telegram Bot** - For notifications (optional but recommended)
+Before setup, ensure you have accounts for:
+- [ ] Shopify store (or create trial)
+- [ ] Shopee seller account
+- [ ] Telegram bot (create via @BotFather)
+- [ ] CJ Dropshipping account
 
 ---
 
 ## Installation
 
-### Option 1: Download Pre-built App (Recommended)
+### Step 1: Download
+Download the latest release from:
+https://github.com/kimgebin/glowasia-automation/releases
 
-#### Step 1: Download the App
+### Step 2: Install
+1. Extract the downloaded archive
+2. Drag GLOWASIA Copilot.app to Applications
+3. On first launch, macOS may ask for permission
 
-1. Visit [GitHub Releases](https://github.com/kimgebin/glowasia-automation/releases)
-2. Download the latest release: `glowasia-automation_vX.X.X_x86_64-apple-darwin.tar.gz`
-3. Save to your Downloads folder
-
-#### Step 2: Extract the Archive
-
-```bash
-cd ~/Downloads
-tar -xzf glowasia-automation_v*.tar.gz
-```
-
-#### Step 3: Install to Applications
-
-```bash
-# Option A: Copy to Applications (recommended)
-cp -R "GLOWASIA Copilot.app" /Applications/
-
-# Option B: Or drag manually via Finder
-# Open Finder → Downloads → Drag "GLOWASIA Copilot.app" to Applications
-```
-
-#### Step 4: Launch the App
-
-1. Open **Spotlight** (⌘ + Space)
-2. Type `GLOWASIA Copilot`
-3. Press **Enter**
-
-> **First Launch Note**: macOS may ask for permission to open an app from the internet. Click "Open" in the dialog.
+### Step 3: Initial Launch
+1. Open GLOWASIA Copilot
+2. Dashboard will show no platforms connected
+3. Go to Settings → Credentials to add platforms
 
 ---
 
-### Option 2: Build from Source
+## Initial Configuration
 
-#### Step 1: Install Prerequisites
+### Creating Telegram Bot
+1. Open Telegram
+2. Search @BotFather
+3. Send `/newbot`
+4. Follow prompts, copy the token
 
-```bash
-# Install Node.js (if not already installed)
-brew install node
-
-# Install Rust (if not already installed)
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-
-# Install Git
-brew install git
-```
-
-#### Step 2: Clone the Repository
-
-```bash
-git clone https://github.com/kimgebin/glowasia-automation.git
-cd glowasia-automation
-```
-
-#### Step 3: Install Dependencies
-
-```bash
-npm install
-```
-
-#### Step 4: Build the Application
-
-```bash
-npm run tauri build -- --bundles app
-```
-
-The built application will be at:
-```
-src-tauri/target/release/bundle/macos/GLOWASIA Copilot.app
-```
-
-#### Step 5: Install
-
-```bash
-cp -R "src-tauri/target/release/bundle/macos/GLOWASIA Copilot.app" /Applications/
-```
+### Getting Chat ID
+1. Search @userinfobot
+2. Start conversation
+3. Bot shows your numeric Chat ID
 
 ---
 
-## First-Time Setup
+## Platform Setup
 
-### Launching GLOWASIA Copilot
+### Shopify
 
-1. Open the application from Applications or Spotlight
-2. The dashboard will display with all platform indicators showing "Not Connected"
-3. The status bar at the bottom shows system health
-
-### Initial Configuration Wizard
-
-#### Step 1: Open Settings
-
-- Click the **Settings** (⚙️) icon in the left sidebar
-- Or use keyboard shortcut **⌘ + ,**
-
-#### Step 2: Navigate to Credentials
-
-- Click the **Credentials** (🔐) tab in the Settings panel
-
-#### Step 3: Add Your First Credential
-
-1. Select the platform from the dropdown (e.g., Shopify)
-2. Enter the required credentials:
-   - **Shopify**: API Key, API Secret Key, Shop URL
-   - **CJ Dropshipping**: Username, Password
-   - **Telegram**: Bot Token, Chat ID
-3. Click **Save**
-4. The credential is encrypted and stored locally
-
-#### Step 4: Test Connection
-
-1. Return to the **Dashboard**
-2. Find the platform card
-3. Click **Test Connection**
-4. If successful, the indicator turns green
-
----
-
-## Platform Configuration
-
-### Shopify Setup
-
-#### 1. Create a Custom App in Shopify
-
-1. Log in to your [Shopify Admin](https://admin.shopify.com)
-2. Go to **Settings** → **Apps and sales channels**
-3. Click **Develop apps for your store**
-4. Click **Allow custom app development**
-5. Click **Create an app**
-6. Name it "GLOWASIA Copilot"
-7. Under **API credentials**, click **Install app**
-8. Copy the **Admin API access token** (save securely - shown only once!)
-
-#### 2. Configure API Access
-
-1. Go to **Configuration** tab
-2. Select the following scopes:
-   - `read_orders`
-   - `write_orders`
+**Step 1: Create a Custom App in Shopify**
+1. Go to Shopify Admin → Settings → Apps and sales channels
+2. Click "Develop app" → "Create an app"
+3. Name it "GLOWASIA Copilot"
+4. Configure API scopes:
    - `read_products`
    - `write_products`
-   - `read_fulfillments`
-   - `write_fulfillments`
-3. Click **Save**
+   - `read_orders`
+   - `write_orders`
+   - `read_inventory`
+   - `write_inventory`
 
-#### 3. Add to GLOWASIA Copilot
+**Step 2: Get API Credentials**
+1. In your app → "API credentials" tab
+2. Click "Install app" to get Admin API access token
+3. Copy the Admin API access token
+4. Note your Shop URL (e.g., `yourstore.myshopify.com`)
 
-1. In GLOWASIA Copilot → Settings → Credentials
-2. Select **Shopify**
+**Step 3: Add to GLOWASIA Copilot**
+1. Settings → Credentials → Add New
+2. Select "Shopify"
 3. Enter:
-   - **Shop URL**: `yourstore.myshopify.com`
-   - **API Key**: Your Admin API access token
-4. Click **Save** → **Test Connection**
+   - API Key = Admin API access token
+   - Shop URL = yourstore.myshopify.com
 
 ---
 
-### CJ Dropshipping Setup
+### Shopee
 
-#### 1. Create CJ Account
+**Step 1: Register as Shopee Partner**
+1. Go to https://partner.shopeemobile.com/
+2. Register as partner if not already registered
+3. Wait for approval (usually 1-2 business days)
 
-1. Go to [CJ Dropshipping](https://www.cjdropshipping.com)
-2. Register for an account (or log in if you have one)
-3. Complete store authorization
+**Step 2: Get Credentials**
+1. Log into Shopee Partner Portal
+2. Go to My Account → API Keys
+3. Copy Partner ID and Partner Key
+4. Authorize your shop to get Shop ID
 
-#### 2. Get CJ API Credentials
-
-1. Log in to CJ Dashboard
-2. Go to **My Account** → **Platform Settings**
-3. Find your **Affiliate Token** or API credentials
-4. Copy the token
-
-#### 3. Add to GLOWASIA Copilot
-
-1. In GLOWASIA Copilot → Settings → Credentials
-2. Select **CJ Dropshipping**
-3. Enter your CJ affiliate token/credentials
-4. Click **Save** → **Test Connection**
-
----
-
-### Telegram Bot Setup
-
-#### 1. Create a Telegram Bot
-
-1. Open Telegram and search for **@BotFather**
-2. Send `/newbot`
-3. Follow prompts to name your bot
-4. Copy the **Bot Token** (format: `123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ`)
-
-#### 2. Get Your Chat ID
-
-1. Search for **@userinfobot** in Telegram
-2. Start the bot
-3. It will reply with your **Chat ID** (a number like `123456789`)
-
-#### 3. Add to GLOWASIA Copilot
-
-1. In GLOWASIA Copilot → Settings → Credentials
-2. Select **Telegram**
+**Step 3: Add to GLOWASIA Copilot**
+1. Settings → Credentials → Add New
+2. Select "Shopee"
 3. Enter:
-   - **Bot Token**: Your bot token from BotFather
-   - **Chat ID**: Your chat ID from userinfobot
-4. Click **Save** → **Test Connection**
-
-#### 4. Verify Notifications
-
-1. Send `/start` to your bot
-2. You should receive a welcome message
-3. Test by triggering an automation action
+   - Partner ID
+   - Partner Key
+   - Shop ID
 
 ---
 
-### Google Sheets Setup
+### Lazada
 
-#### 1. Create a Google Sheet
+**Step 1: Register as Lazada Partner**
+1. Go to https://open.lazada.com/
+2. Register as partner
+3. Create application
 
-1. Go to [Google Sheets](https://sheets.google.com)
-2. Create a new spreadsheet
-3. Name it "GLOWASIA Orders Tracker"
-4. Create these sheets/tabs:
-   - **Orders** - Main order tracking
-   - **Products** - Product inventory
-   - **Settings** - Configuration values
+**Step 2: Get Credentials**
+1. Go to Console → Your App
+2. Copy App Key and App Secret
+3. Get your User ID from account settings
 
-#### 2. Share the Sheet
-
-1. Click **Share** in your Google Sheet
-2. Click **Get link**
-3. Set permissions to **Anyone with the link** (or "Anyone can edit" for auto-updates)
-4. Copy the Sheet ID from the URL:
-   ```
-   https://docs.google.com/spreadsheets/d/[SHEET_ID]/edit
-   ```
-
-#### 3. Add to GLOWASIA Copilot
-
-1. In GLOWASIA Copilot → Settings → Credentials
-2. Select **Google Sheets**
-3. Enter the **Sheet ID**
-4. Click **Save** → **Test Connection**
+**Step 3: Add to GLOWASIA Copilot**
+1. Settings → Credentials → Add New
+2. Select "Lazada"
+3. Enter:
+   - API Key = App Key
+   - Secret = App Secret
+   - User ID
 
 ---
 
-## Verification
+### Tokopedia
 
-### Checklist
+**Step 1: Register as Tokopedia Partner**
+1. Go to https://developer.tokopedia.com/
+2. Register as partner
+3. Create app to get credentials
 
-After setup, verify each item:
+**Step 2: Get Credentials**
+1. Go to Console → Your App
+2. Copy Client ID and Client Secret
+3. Set up redirect URI
 
-- [ ] App launches successfully
-- [ ] Settings panel opens (⌘ + ,)
-- [ ] Credentials tab is accessible
-- [ ] All platform credentials are saved
-- [ ] Test Connection shows green for each platform
-- [ ] Dashboard shows platform status cards
-- [ ] Telegram notifications are working (if configured)
+**Step 3: Add to GLOWASIA Copilot**
+1. Settings → Credentials → Add New
+2. Select "Tokopedia"
+3. Enter:
+   - Client ID
+   - Client Secret
 
-### Running Your First Automation
+---
 
-1. Ensure all credentials are saved and tested
-2. Go to **Dashboard**
-3. Toggle **Automation** to **ON**
-4. Watch the Activity Log for live updates
-5. Create a test order in Shopify
-6. Verify it appears in Google Sheets
-7. Verify you receive a Telegram notification
+### TikTok Shop
+
+**Step 1: Register as TikTok Seller**
+1. Go to https://seller-uk.tiktok.com/ (or your region)
+2. Register as seller
+3. Access Developer Portal
+
+**Step 2: Get Credentials**
+1. Go to Developer Portal → Apps
+2. Create new app
+3. Copy App Key and App Secret
+
+**Step 3: Add to GLOWASIA Copilot**
+1. Settings → Credentials → Add New
+2. Select "TikTok Shop"
+3. Enter:
+   - App Key
+   - App Secret
+
+---
+
+### CJ Dropshipping
+
+**Step 1: Create CJ Account**
+1. Go to https://www.cjdropshipping.com/
+2. Register for account
+3. Complete seller verification
+
+**Step 2: Get API Credentials**
+1. Log into CJ dashboard
+2. Go to My Account → API
+3. Generate API Key and Secret
+
+**Step 3: Add to GLOWASIA Copilot**
+1. Settings → Credentials → Add New
+2. Select "CJ Dropshipping"
+3. Enter:
+   - API Key
+   - Secret
+
+---
+
+### Google Sheets
+
+**Step 1: Create Google Cloud Project**
+1. Go to https://console.cloud.google.com/
+2. Create new project
+3. Enable Google Sheets API
+
+**Step 2: Get API Credentials**
+1. Go to Credentials → Service Account
+2. Create new service account
+3. Download JSON key file
+4. Share your Google Sheet with the service account email
+
+**Step 3: Add to GLOWASIA Copilot**
+1. Settings → Credentials → Add New
+2. Select "Google Sheets"
+3. Enter:
+   - Service Account Email
+   - Private Key (from JSON file)
+   - Spreadsheet ID (from URL)
+
+---
+
+### Midtrans
+
+**Step 1: Create Midtrans Account**
+1. Go to https://midtrans.com/
+2. Register as merchant
+3. Complete verification
+
+**Step 2: Get Credentials**
+1. Log into Midtrans Dashboard
+2. Go to Settings → Access Keys
+3. Copy Server Key and Client Key
+
+**Step 3: Add to GLOWASIA Copilot**
+1. Settings → Credentials → Add New
+2. Select "Midtrans"
+3. Enter:
+   - Server Key
+   - Client Key
+
+---
+
+## Testing
+
+After configuring credentials:
+
+1. Go to Dashboard
+2. Click "Test Connection" on each platform
+3. Green indicator = Connected
+4. Red indicator = Check credentials and try again
+
+### Test Checklist
+- [ ] Shopify connection successful
+- [ ] Shopee connection successful
+- [ ] Telegram bot responding
+- [ ] CJ Dropshipping product sync working
+- [ ] Google Sheets inventory updating
 
 ---
 
 ## Next Steps
 
-- Read the [Credentials Guide](CREDENTIALS.md) for advanced credential management
-- Read the [Automation Guide](AUTOMATION.md) to understand workflows
-- Read the [Troubleshooting Guide](TROUBLESHOOTING.md) if you encounter issues
+After setup, see [AUTOMATION.md](AUTOMATION.md) for workflow guides.
 
----
-
-## Need Help?
-
-1. Check [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for common issues
-2. Check existing [GitHub Issues](https://github.com/kimgebin/glowasia-automation/issues)
-3. Create a new issue with:
-   - macOS version
-   - App version
-   - Steps to reproduce
-   - Expected vs actual behavior
+For troubleshooting, see [README.md](../README.md#-troubleshooting) troubleshooting section.
