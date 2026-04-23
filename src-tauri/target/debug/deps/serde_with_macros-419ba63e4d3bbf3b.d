@@ -1,0 +1,8 @@
+/Users/vickylawrenz/.openclaw/workspace/glowasia-automation/src-tauri/target/debug/deps/serde_with_macros-419ba63e4d3bbf3b.d: /Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_with_macros-3.18.0/src/lib.rs /Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_with_macros-3.18.0/src/apply.rs /Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_with_macros-3.18.0/src/lazy_bool.rs /Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_with_macros-3.18.0/src/utils.rs
+
+/Users/vickylawrenz/.openclaw/workspace/glowasia-automation/src-tauri/target/debug/deps/libserde_with_macros-419ba63e4d3bbf3b.dylib: /Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_with_macros-3.18.0/src/lib.rs /Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_with_macros-3.18.0/src/apply.rs /Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_with_macros-3.18.0/src/lazy_bool.rs /Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_with_macros-3.18.0/src/utils.rs
+
+/Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_with_macros-3.18.0/src/lib.rs:
+/Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_with_macros-3.18.0/src/apply.rs:
+/Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_with_macros-3.18.0/src/lazy_bool.rs:
+/Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_with_macros-3.18.0/src/utils.rs:

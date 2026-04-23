@@ -1,0 +1,12 @@
+/Users/vickylawrenz/.openclaw/workspace/glowasia-automation/src-tauri/target/release/deps/mime_guess-e6cb393e307edd76.d: /Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mime_guess-2.0.5/src/lib.rs /Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mime_guess-2.0.5/src/impl_bin_search.rs /Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mime_guess-2.0.5/src/mime_types.rs /Users/vickylawrenz/.openclaw/workspace/glowasia-automation/src-tauri/target/release/build/mime_guess-238c2a0b65dacd00/out/mime_types_generated.rs
+
+/Users/vickylawrenz/.openclaw/workspace/glowasia-automation/src-tauri/target/release/deps/libmime_guess-e6cb393e307edd76.rlib: /Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mime_guess-2.0.5/src/lib.rs /Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mime_guess-2.0.5/src/impl_bin_search.rs /Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mime_guess-2.0.5/src/mime_types.rs /Users/vickylawrenz/.openclaw/workspace/glowasia-automation/src-tauri/target/release/build/mime_guess-238c2a0b65dacd00/out/mime_types_generated.rs
+
+/Users/vickylawrenz/.openclaw/workspace/glowasia-automation/src-tauri/target/release/deps/libmime_guess-e6cb393e307edd76.rmeta: /Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mime_guess-2.0.5/src/lib.rs /Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mime_guess-2.0.5/src/impl_bin_search.rs /Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mime_guess-2.0.5/src/mime_types.rs /Users/vickylawrenz/.openclaw/workspace/glowasia-automation/src-tauri/target/release/build/mime_guess-238c2a0b65dacd00/out/mime_types_generated.rs
+
+/Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mime_guess-2.0.5/src/lib.rs:
+/Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mime_guess-2.0.5/src/impl_bin_search.rs:
+/Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mime_guess-2.0.5/src/mime_types.rs:
+/Users/vickylawrenz/.openclaw/workspace/glowasia-automation/src-tauri/target/release/build/mime_guess-238c2a0b65dacd00/out/mime_types_generated.rs:
+
+# env-dep:MIME_TYPES_GENERATED_PATH=/Users/vickylawrenz/.openclaw/workspace/glowasia-automation/src-tauri/target/release/build/mime_guess-238c2a0b65dacd00/out/mime_types_generated.rs

@@ -1,0 +1,16 @@
+cargo:rerun-if-env-changed=TAURI_CONFIG
+cargo:rustc-check-cfg=cfg(desktop)
+cargo:rustc-cfg=desktop
+cargo:rustc-check-cfg=cfg(mobile)
+cargo:rerun-if-changed=/Users/vickylawrenz/.openclaw/workspace/glowasia-automation/src-tauri/tauri.conf.json
+cargo:rustc-env=TAURI_ANDROID_PACKAGE_NAME_APP_NAME=automation
+cargo:rustc-env=TAURI_ANDROID_PACKAGE_NAME_PREFIX=com_glowasia
+cargo:rustc-check-cfg=cfg(dev)
+cargo:PERMISSION_FILES_PATH=/Users/vickylawrenz/.openclaw/workspace/glowasia-automation/src-tauri/target/release/build/glowasia-automation-20cea97c3f71afa9/out/app-manifest/__app__-permission-files
+cargo:rerun-if-changed=capabilities
+cargo:rerun-if-env-changed=REMOVE_UNUSED_COMMANDS
+cargo:rustc-env=TAURI_ENV_TARGET_TRIPLE=x86_64-apple-darwin
+cargo:rerun-if-changed=../dist/index.html
+cargo:rerun-if-changed=../dist/assets/index-CBj9-8mG.js
+cargo:rerun-if-changed=../dist/assets/index-B_RPwlAw.css
+cargo:rustc-env=MACOSX_DEPLOYMENT_TARGET=10.13

@@ -201,6 +201,152 @@ src-tauri/src/
 - Windows (.exe) - future
 - Linux (.AppImage) - future
 
+## Adaptive Stealth System
+
+### Overview
+GLOWASIA Copilot implements a smart **adaptive stealth system** that uses the minimum required anti-detection techniques per platform, automatically escalating only when detected. This approach balances performance with effectiveness.
+
+### Stealth Levels
+
+| Level | Name | Techniques Applied | Use Case |
+|-------|------|-------------------|----------|
+| **1** | BASIC | Just stealth plugin | Fast operations, low-risk platforms |
+| **2** | MODERATE | + Human delays, viewport spoofing | Shopify, CJ Dropshipping |
+| **3** | AGGRESSIVE | + Canvas, WebGL, font spoofing | Shopee, Lazada |
+| **4** | MAXIMUM | + Audio, WebRTC, Battery API spoofing | Tokopedia, TikTok Shop |
+
+### Platform Strictness Mapping
+
+| Platform | Stealth Level | Reason |
+|----------|---------------|--------|
+| midtrans | BASIC | Payment gateway, low bot risk |
+| shopify | MODERATE | Standard e-commerce, moderate detection |
+| cj | MODERATE | Dropshipping, moderate detection |
+| lazada | AGGRESSIVE | Competitive marketplace |
+| shopee | AGGRESSIVE | Strong anti-bot measures |
+| tokopedia | MAXIMUM | Strongest detection, requires all techniques |
+| tiktok | MAXIMUM | Strongest detection, requires all techniques |
+
+### Stealth Techniques by Level
+
+#### Level 1: Basic
+- `playwright-extra-plugin-stealth` plugin applied to Chromium
+- Chrome flags for disabling automation features
+
+#### Level 2: Moderate
+All Level 1 techniques, plus:
+- **Webdriver Property**: Hides `navigator.webdriver`
+- **Chrome Runtime**: Fakes `window.chrome.runtime` object
+- **Plugin Simulation**: Returns realistic `navigator.plugins` array
+- **Language Spoofing**: Sets `navigator.languages` to regional locales
+- **Human-like Timeouts**: 30s default timeouts for realistic timing
+
+#### Level 3: Aggressive
+All Level 2 techniques, plus:
+- **Canvas Fingerprinting**: Adds tiny random noise to canvas API responses
+- **WebGL Spoofing**: Masks GPU vendor/renderer to common values
+- **Font Spoofing**: Fakes font list and status
+- **Connection Spoofing**: Fakes `navigator.connection` API
+- **Device Memory Spoofing**: Returns random device memory (4-16GB)
+- **Hardware Concurrency**: Returns random CPU cores (4-16)
+- **Platform Spoofing**: Sets `navigator.platform` to `MacIntel`
+- **Do Not Track**: Enables tracking opt-out
+- **Additional Chrome Flags**: `--disable-web-security`, `--disable-features=IsolateOrigins,site-per-process`
+
+#### Level 4: Maximum
+All Level 3 techniques, plus:
+- **Audio Context Spoofing**: Adds subtle noise to audio analysis data
+- **WebRTC Leak Prevention**: Intercepts `RTCPeerConnection`
+- **Battery API Spoofing**: Returns fully charged state
+- **Gamepad Spoofing**: Returns empty gamepad array
+- **IndexedDB Blocking**: Prevents certain storage fingerprinting
+
+### Auto-Escalation System
+
+The system automatically escalates stealth level when detected:
+
+1. **Detection Check**: After each action, evaluates browser for detection indicators:
+   - `navigator.webdriver` flag
+   - Automation-specific variables (`callSelenium`, `_phantom`, etc.)
+   - Headless browser indicators
+
+2. **Escalation Triggers**:
+   - Detection indicators found → escalate to next level
+   - Captcha/blocked errors → escalate to next level
+   - Any bot detection message → escalate to next level
+
+3. **Escalation Behavior**:
+   - Closes current browser session
+   - Increases stealth level by 1
+   - Retries action with enhanced techniques
+   - Maximum 4 levels, then fails with error
+
+### Detection Indicators Checked
+
+```javascript
+{
+  webdriver: !!navigator.webdriver,
+  chromeRuntime: !navigator.chrome?.runtime,
+  automationControlled: window.navigator.webdriver === true,
+  headless: navigator.userAgent.includes('Headless'),
+  permissions: Notification.permission === 'denied',
+  automationVar: 'callSelenium' | 'callPhantom' | '_phantom' | '__webdriver_evaluate'
+}
+```
+
+### Execution Flow
+
+```
+Platform Action Request
+         │
+         ▼
+  Determine Stealth Level
+  (from PLATFORM_STRICTNESS)
+         │
+         ▼
+   Execute Action
+   (at current level)
+         │
+         ▼
+   Detection Check
+         │
+    ┌────┴────┐
+    │         │
+  Clean    Detected
+    │         │
+    ▼         ▼
+  Return   Escalate
+  Result   Level +1
+    │         │
+    └────┬────┘
+         │
+         ▼
+   Max Level?
+  Yes → Error
+  No → Retry
+```
+
+### Implementation
+
+**File:** `scripts/playwright-runner.js`
+
+- **STEALTH_LEVELS**: Enum defining 4 levels (BASIC, MODERATE, AGGRESSIVE, MAXIMUM)
+- **PLATFORM_STRICTNESS**: Mapping of platform → required stealth level
+- **TECHNIQUES**: Object containing `applyBasicStealth`, `applyModerateStealth`, `applyAggressiveStealth`, `applyMaximumStealth`
+- **checkIfDetected()**: Evaluates browser for detection indicators
+- **executeWithAdaptiveStealth()**: Main loop that escalates on detection
+- **executeAction()**: Launches browser with appropriate stealth level
+
+### Important Notes
+
+1. **Performance vs. Stealth Tradeoff**: Using minimum required level per platform keeps operations fast
+2. **Auto-Escalation**: System automatically handles platforms that become more aggressive
+3. **Not 100% Foolproof**: Platforms evolve detection methods constantly
+4. **Ethical Use**: Respect platform Terms of Service
+5. **Retry Logic**: Built-in escalation handles transient detection
+
+---
+
 ## Auto-Update System
 
 ### Overview

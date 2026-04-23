@@ -1,0 +1,16 @@
+{
+  "name": "glowasia-scripts",
+  "version": "1.0.0",
+  "description": "GLOWASIA Dropshipping Copilot Browser Automation Scripts",
+  "main": "index.js",
+  "type": "module",
+  "dependencies": {
+    "playwright": "^1.40.0",
+    "playwright-extra": "^1.0.0",
+    "playwright-extra-plugin-stealth": "^0.0.1"
+  },
+  "scripts": {
+    "install-browsers": "npx playwright install",
+    "test": "node test.js"
+  }
+}

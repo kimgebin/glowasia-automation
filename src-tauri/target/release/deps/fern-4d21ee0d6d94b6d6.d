@@ -1,0 +1,11 @@
+/Users/vickylawrenz/.openclaw/workspace/glowasia-automation/src-tauri/target/release/deps/fern-4d21ee0d6d94b6d6.d: /Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fern-0.7.1/src/lib.rs /Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fern-0.7.1/src/builders.rs /Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fern-0.7.1/src/errors.rs /Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fern-0.7.1/src/log_impl.rs /Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fern-0.7.1/src/meta.rs
+
+/Users/vickylawrenz/.openclaw/workspace/glowasia-automation/src-tauri/target/release/deps/libfern-4d21ee0d6d94b6d6.rlib: /Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fern-0.7.1/src/lib.rs /Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fern-0.7.1/src/builders.rs /Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fern-0.7.1/src/errors.rs /Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fern-0.7.1/src/log_impl.rs /Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fern-0.7.1/src/meta.rs
+
+/Users/vickylawrenz/.openclaw/workspace/glowasia-automation/src-tauri/target/release/deps/libfern-4d21ee0d6d94b6d6.rmeta: /Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fern-0.7.1/src/lib.rs /Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fern-0.7.1/src/builders.rs /Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fern-0.7.1/src/errors.rs /Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fern-0.7.1/src/log_impl.rs /Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fern-0.7.1/src/meta.rs
+
+/Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fern-0.7.1/src/lib.rs:
+/Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fern-0.7.1/src/builders.rs:
+/Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fern-0.7.1/src/errors.rs:
+/Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fern-0.7.1/src/log_impl.rs:
+/Users/vickylawrenz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fern-0.7.1/src/meta.rs:

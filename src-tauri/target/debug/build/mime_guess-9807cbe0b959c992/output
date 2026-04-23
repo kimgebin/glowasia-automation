@@ -1,0 +1,1 @@
+cargo:rustc-env=MIME_TYPES_GENERATED_PATH=/Users/vickylawrenz/.openclaw/workspace/glowasia-automation/src-tauri/target/debug/build/mime_guess-9807cbe0b959c992/out/mime_types_generated.rs

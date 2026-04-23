@@ -115,10 +115,10 @@ https://github.com/kimgebin/glowasia-automation/releases
 
 ### Lazada
 
-**Step 1: Register as Lazada Partner**
-1. Go to https://open.lazada.com/
-2. Register as partner
-3. Create application
+**Step 1: Register as Lazada Seller**
+1. Go to https://sellercenter.lazada.co.id/apps/seller/login
+2. Login with your Lazada seller account
+3. Navigate to Settings → API Credentials
 
 **Step 2: Get Credentials**
 1. Go to Console → Your App

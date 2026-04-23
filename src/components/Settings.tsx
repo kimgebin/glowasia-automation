@@ -1,0 +1,698 @@
+import { useState, useEffect } from 'react';
+import { invoke } from '@tauri-apps/api/core';
+import { sendNotification, isPermissionGranted, requestPermission } from '@tauri-apps/plugin-notification';
+
+interface SavedCredential {
+  platform: string;
+  data: {
+    api_key?: string;
+    api_secret?: string;
+    access_token?: string;
+    refresh_token?: string;
+    shop_url?: string;
+    [key: string]: string | undefined;
+  };
+  status: string;
+  updated_at: string;
+}
+
+interface AutoPilotStatus {
+  enabled: boolean;
+  order_polling_sec: number;
+  inventory_sync_sec: number;
+  health_check_sec: number;
+  last_health_check_secs: number;
+  last_order_check_secs: number;
+  last_inventory_sync_secs: number;
+}
+
+interface HealthStatus {
+  timestamp: string;
+  database: string;
+  credentials_status: string;
+  credentials_loaded: string[];
+}
+
+export default function Settings() {
+  const [activeSettingsTab, setActiveSettingsTab] = useState('credentials');
+  const [savedPlatforms, setSavedPlatforms] = useState<SavedCredential[]>([]);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [selectedPlatform, setSelectedPlatform] = useState('');
+  const [formData, setFormData] = useState<Record<string, string>>({});
+  const [updateStatus, setUpdateStatus] = useState<'idle' | 'checking' | 'available' | 'ready'>('idle');
+  const [appVersion, setAppVersion] = useState('1.0.0');
+  const [testingPlatform, setTestingPlatform] = useState<string | null>(null);
+  const [testResult, setTestResult] = useState<Record<string, 'success' | 'failed' | null>>({});
+
+  // Auto-Pilot state
+  const [autoPilotStatus, setAutoPilotStatus] = useState<AutoPilotStatus | null>(null);
+  const [healthStatus, setHealthStatus] = useState<HealthStatus | null>(null);
+  const [orderPollingInterval, setOrderPollingInterval] = useState(300);
+  const [inventorySyncInterval, setInventorySyncInterval] = useState(3600);
+
+  const platforms = [
+    { id: 'shopify', name: 'Shopify', fields: ['shop_url', 'api_key', 'access_token'] },
+    { id: 'shopee', name: 'Shopee', fields: ['partner_id', 'partner_key', 'shop_id'] },
+    { id: 'lazada', name: 'Lazada', fields: ['api_key', 'api_secret', 'user_id'] },
+    { id: 'tokopedia', name: 'Tokopedia', fields: ['client_id', 'client_secret'] },
+    { id: 'tiktok', name: 'TikTok Shop', fields: ['app_key', 'app_secret'] },
+    { id: 'telegram', name: 'Telegram', fields: ['bot_token', 'chat_id'] },
+    { id: 'cj', name: 'CJ Dropshipping', fields: ['email', 'password'] },
+    { id: 'midtrans', name: 'Midtrans', fields: ['server_key', 'client_key'] },
+    { id: 'etsy', name: 'Etsy', fields: ['api_key', 'shared_secret', 'oauth_token', 'refresh_token', 'shop_id'] },
+  ];
+
+  useEffect(() => {
+    loadSavedPlatforms();
+    loadAppVersion();
+    loadAutoPilotStatus();
+  }, []);
+
+  const loadSavedPlatforms = async () => {
+    try {
+      const platforms = await invoke<SavedCredential[]>('list_saved_platforms');
+      setSavedPlatforms(platforms);
+      return platforms;
+    } catch (e) {
+      console.error('Failed to load platforms:', e);
+      return [];
+    }
+  };
+
+  const loadAppVersion = async () => {
+    try {
+      const version = await invoke<string>('get_app_version');
+      setAppVersion(version);
+    } catch (e) {
+      console.error('Failed to load version:', e);
+    }
+  };
+
+  const loadAutoPilotStatus = async () => {
+    try {
+      const status = await invoke<AutoPilotStatus>('get_auto_pilot_status');
+      setAutoPilotStatus(status);
+      setOrderPollingInterval(status.order_polling_sec);
+      setInventorySyncInterval(status.inventory_sync_sec);
+    } catch (e) {
+      console.error('Failed to load auto-pilot status:', e);
+    }
+  };
+
+  const saveCredential = async () => {
+    try {
+      // Save to database
+      await invoke('save_credential', {
+        platform: selectedPlatform,
+        data: {
+          api_key: formData.api_key || formData.email || null,
+          api_secret: formData.api_secret || formData.password || null,
+          access_token: formData.access_token || null,
+          refresh_token: formData.refresh_token || null,
+          shop_url: formData.shop_url || null,
+          additional_data: JSON.stringify(formData),
+        },
+      });
+      
+      // Try to send notification
+      try {
+        const permissionGranted = await isPermissionGranted();
+        if (!permissionGranted) {
+          const permission = await requestPermission();
+          if (permission === 'granted') {
+            sendNotification({
+              title: 'GLOWASIA Copilot',
+              body: `✅ ${selectedPlatform} saved successfully!`,
+            });
+          } else {
+            // Permission denied - show alert instead
+            alert(`✅ ${selectedPlatform} saved successfully!`);
+          }
+        } else {
+          sendNotification({
+            title: 'GLOWASIA Copilot',
+            body: `✅ ${selectedPlatform} saved successfully!`,
+          });
+        }
+      } catch (notifError) {
+        // Notification failed - show alert
+        console.error('Notification error:', notifError);
+        alert(`✅ ${selectedPlatform} saved successfully!`);
+      }
+      
+      setShowAddForm(false);
+      setFormData({});
+      setSelectedPlatform('');
+      loadSavedPlatforms();
+    } catch (e) {
+      console.error('Failed to save credential:', e);
+      alert('❌ Failed to save: ' + e);
+    }
+  };
+
+  const deleteCredential = async (platform: string) => {
+    try {
+      await invoke('delete_credential', { platform });
+      loadSavedPlatforms();
+    } catch (e) {
+      console.error('Failed to delete:', e);
+    }
+  };
+
+  const testConnection = async (platform: string) => {
+    setTestingPlatform(platform);
+    setTestResult({ ...testResult, [platform]: null });
+    
+    try {
+      let result: { success: boolean; message: string };
+      
+      switch (platform) {
+        case 'telegram':
+          result = await invoke<{ success: boolean; message: string }>('test_telegram');
+          break;
+        case 'shopify':
+          result = await invoke<{ success: boolean; message: string }>('test_shopify_login');
+          break;
+        case 'cj':
+          result = await invoke<{ success: boolean; message: string }>('test_cj_login');
+          break;
+        case 'shopee':
+          result = await invoke<{ success: boolean; message: string }>('test_shopee_login');
+          break;
+        case 'lazada':
+          result = await invoke<{ success: boolean; message: string }>('test_lazada_login');
+          break;
+        case 'etsy':
+          result = await invoke<{ success: boolean; message: string }>('test_etsy_login');
+          break;
+        default:
+          result = { success: false, message: 'Test not implemented for this platform' };
+      }
+      
+      setTestResult({ ...testResult, [platform]: result.success ? 'success' : 'failed' });
+      
+      if (result.success) {
+        sendNotification({
+          title: 'GLOWASIA Copilot',
+          body: `✅ ${platform}: Connected successfully!`,
+        });
+      } else {
+        alert(`${platform}: ${result.message}`);
+      }
+    } catch (e) {
+      setTestResult({ ...testResult, [platform]: 'failed' });
+      alert(`Test failed: ${e}`);
+    } finally {
+      setTestingPlatform(null);
+    }
+  };
+
+  const checkForUpdates = async () => {
+    setUpdateStatus('checking');
+    try {
+      const update = await invoke<string | null>('check_for_updates');
+      if (update) {
+        setUpdateStatus('available');
+      } else {
+        setUpdateStatus('idle');
+      }
+    } catch (e) {
+      setUpdateStatus('idle');
+    }
+  };
+
+  // Auto-Pilot controls
+  const enableAutoPilot = async () => {
+    try {
+      await invoke('enable_auto_pilot');
+      loadAutoPilotStatus();
+    } catch (e) {
+      console.error('Failed to enable auto-pilot:', e);
+    }
+  };
+
+  const disableAutoPilot = async () => {
+    try {
+      await invoke('disable_auto_pilot');
+      loadAutoPilotStatus();
+    } catch (e) {
+      console.error('Failed to disable auto-pilot:', e);
+    }
+  };
+
+  const runHealthCheck = async () => {
+    try {
+      const health = await invoke<HealthStatus>('health_check');
+      setHealthStatus(health);
+    } catch (e) {
+      console.error('Failed to run health check:', e);
+    }
+  };
+
+  const sendDailyReport = async () => {
+    try {
+      await invoke('send_daily_report');
+      alert('Daily report sent to Telegram!');
+    } catch (e) {
+      console.error('Failed to send daily report:', e);
+      alert('Failed to send report: ' + e);
+    }
+  };
+
+  const updateOrderPollingInterval = async () => {
+    try {
+      await invoke('set_order_polling_interval', { seconds: orderPollingInterval });
+      alert('Order polling interval updated!');
+    } catch (e) {
+      console.error('Failed to update interval:', e);
+    }
+  };
+
+  const updateInventorySyncInterval = async () => {
+    try {
+      await invoke('set_inventory_sync_interval', { seconds: inventorySyncInterval });
+      alert('Inventory sync interval updated!');
+    } catch (e) {
+      console.error('Failed to update interval:', e);
+    }
+  };
+
+  const formatTime = (seconds: number) => {
+    if (seconds < 60) return `${seconds}s ago`;
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+    return `${Math.floor(seconds / 3600)}h ago`;
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Tab Navigation */}
+      <div className="flex space-x-4 border-b border-gray-700">
+        <button
+          onClick={() => setActiveSettingsTab('credentials')}
+          className={`px-4 py-2 border-b-2 ${
+            activeSettingsTab === 'credentials'
+              ? 'border-blue-500 text-blue-400'
+              : 'border-transparent text-gray-400'
+          }`}
+        >
+          🔐 Credentials
+        </button>
+        <button
+          onClick={() => setActiveSettingsTab('autopilot')}
+          className={`px-4 py-2 border-b-2 ${
+            activeSettingsTab === 'autopilot'
+              ? 'border-blue-500 text-blue-400'
+              : 'border-transparent text-gray-400'
+          }`}
+        >
+          🚀 Auto-Pilot
+        </button>
+        <button
+          onClick={() => setActiveSettingsTab('updates')}
+          className={`px-4 py-2 border-b-2 ${
+            activeSettingsTab === 'updates'
+              ? 'border-blue-500 text-blue-400'
+              : 'border-transparent text-gray-400'
+          }`}
+        >
+          🔄 Updates
+        </button>
+        <button
+          onClick={() => setActiveSettingsTab('about')}
+          className={`px-4 py-2 border-b-2 ${
+            activeSettingsTab === 'about'
+              ? 'border-blue-500 text-blue-400'
+              : 'border-transparent text-gray-400'
+          }`}
+        >
+          ℹ️ About
+        </button>
+      </div>
+
+      {/* Credentials Tab */}
+      {activeSettingsTab === 'credentials' && (
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-bold">Saved Platforms</h3>
+            <button
+              onClick={() => setShowAddForm(true)}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg"
+            >
+              + Add Platform
+            </button>
+          </div>
+
+          {showAddForm && (
+            <div className="bg-gray-800 rounded-lg p-6 space-y-4">
+              <h4 className="font-bold">Add New Credential</h4>
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Platform</label>
+                <select
+                  value={selectedPlatform}
+                  onChange={async (e) => {
+                    const platform = e.target.value;
+                    setSelectedPlatform(platform);
+                    
+                    // Get fresh data from backend
+                    let allPlatforms;
+                    try {
+                      allPlatforms = await invoke<any[]>('list_saved_platforms');
+                    } catch (err) {
+                      console.error('Failed to load platforms:', err);
+                      setFormData({});
+                      return;
+                    }
+                    
+                    const saved = allPlatforms.find(s => s.platform === platform);
+                    if (saved && saved.data) {
+                      // Build form fields based on platform
+                      const formFields: Record<string, string> = {};
+                      
+                      // Platform-specific field mapping (DB field -> form field)
+                      if (platform === 'cj') {
+                        // CJ: api_key=email, api_secret=password
+                        if (saved.data.api_key) formFields.email = saved.data.api_key;
+                        if (saved.data.api_secret) formFields.password = saved.data.api_secret;
+                      } else if (platform === 'telegram') {
+                        // Telegram: api_key=bot_token, api_secret=chat_id
+                        if (saved.data.api_key) formFields.bot_token = saved.data.api_key;
+                        if (saved.data.api_secret) formFields.chat_id = saved.data.api_secret;
+                      } else if (platform === 'shopify') {
+                        // Shopify: shop_url, api_key, access_token
+                        if (saved.data.shop_url) formFields.shop_url = saved.data.shop_url;
+                        if (saved.data.api_key) formFields.api_key = saved.data.api_key;
+                        if (saved.data.access_token) formFields.access_token = saved.data.access_token;
+                      } else {
+                        // Generic: use additional_data if available
+                        try {
+                          if (saved.data.additional_data) {
+                            const extra = JSON.parse(saved.data.additional_data);
+                            Object.assign(formFields, extra);
+                          }
+                        } catch { /* ignore */ }
+                        // Fallback to direct fields
+                        if (saved.data.api_key) formFields.api_key = saved.data.api_key;
+                        if (saved.data.api_secret) formFields.api_secret = saved.data.api_secret;
+                      }
+                      
+                      setFormData(formFields);
+                    } else {
+                      setFormData({});
+                    }
+                  }}
+                  className="w-full bg-gray-700 rounded px-4 py-2"
+                >
+                  <option value="">Select platform...</option>
+                  {platforms.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {selectedPlatform && platforms.find((p) => p.id === selectedPlatform)?.fields.map((field) => (
+                <div key={field}>
+                  <label className="block text-sm text-gray-400 mb-2">
+                    {field.replace('_', ' ').toUpperCase()}
+                  </label>
+                  <input
+                    type={field.includes('password') || field.includes('secret') || field.includes('key') ? 'password' : 'text'}
+                    value={formData[field] || ''}
+                    onChange={(e) => setFormData({ ...formData, [field]: e.target.value })}
+                    className="w-full bg-gray-700 rounded px-4 py-2"
+                    placeholder={`Enter ${field}`}
+                  />
+                </div>
+              ))}
+
+              <div className="flex space-x-4">
+                <button
+                  onClick={saveCredential}
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg"
+                >
+                  Save
+                </button>
+                <button
+                  onClick={() => setShowAddForm(false)}
+                  className="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Saved Platforms List */}
+          <div className="space-y-2">
+            {savedPlatforms.map((cred) => (
+              <div key={cred.platform} className="bg-gray-800 rounded-lg p-4">
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <p className="font-bold capitalize">{cred.platform}</p>
+                    <p className="text-sm text-gray-400">Updated: {new Date(cred.updated_at).toLocaleDateString()}</p>
+                  </div>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => testConnection(cred.platform)}
+                      disabled={testingPlatform === cred.platform}
+                      className={`px-3 py-1 rounded text-sm ${
+                        testResult[cred.platform] === 'success' 
+                          ? 'bg-green-600 hover:bg-green-700' 
+                          : testResult[cred.platform] === 'failed'
+                          ? 'bg-red-600 hover:bg-red-700'
+                          : 'bg-blue-600 hover:bg-blue-700'
+                      } disabled:opacity-50`}
+                    >
+                      {testingPlatform === cred.platform ? 'Testing...' : 
+                       testResult[cred.platform] === 'success' ? '✓ Connected' :
+                       testResult[cred.platform] === 'failed' ? '✗ Failed' :
+                       'Test'}
+                    </button>
+                    <button
+                      onClick={() => deleteCredential(cred.platform)}
+                      className="px-3 py-1 bg-red-600 hover:bg-red-700 rounded text-sm"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+                {cred.data.shop_url && (
+                  <p className="text-xs text-gray-500">URL: {cred.data.shop_url}</p>
+                )}
+                {cred.data.api_key && (
+                  <p className="text-xs text-gray-500">Key: {cred.data.api_key.substring(0, 20)}...</p>
+                )}
+              </div>
+            ))}
+            {savedPlatforms.length === 0 && (
+              <p className="text-gray-400 text-center py-8">No saved credentials. Click "Add Platform" to add.</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Auto-Pilot Tab */}
+      {activeSettingsTab === 'autopilot' && (
+        <div className="space-y-6">
+          {/* Status Card */}
+          <div className="bg-gray-800 rounded-lg p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold">🚀 Auto-Pilot Status</h3>
+              {autoPilotStatus && (
+                <span className={`px-3 py-1 rounded-full text-sm ${
+                  autoPilotStatus.enabled ? 'bg-green-600' : 'bg-gray-600'
+                }`}>
+                  {autoPilotStatus.enabled ? '🟢 Active' : '⚪ Disabled'}
+                </span>
+              )}
+            </div>
+
+            {autoPilotStatus ? (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-gray-700 rounded-lg p-3">
+                  <p className="text-sm text-gray-400">Health Check</p>
+                  <p className="text-lg font-bold">{formatTime(autoPilotStatus.last_health_check_secs)}</p>
+                </div>
+                <div className="bg-gray-700 rounded-lg p-3">
+                  <p className="text-sm text-gray-400">Order Check</p>
+                  <p className="text-lg font-bold">{formatTime(autoPilotStatus.last_order_check_secs)}</p>
+                </div>
+                <div className="bg-gray-700 rounded-lg p-3">
+                  <p className="text-sm text-gray-400">Inventory Sync</p>
+                  <p className="text-lg font-bold">{formatTime(autoPilotStatus.last_inventory_sync_secs)}</p>
+                </div>
+                <div className="bg-gray-700 rounded-lg p-3">
+                  <p className="text-sm text-gray-400">Order Interval</p>
+                  <p className="text-lg font-bold">{autoPilotStatus.order_polling_sec}s</p>
+                </div>
+              </div>
+            ) : (
+              <p className="text-gray-400">Loading status...</p>
+            )}
+
+            <div className="flex space-x-4 mt-4">
+              <button
+                onClick={enableAutoPilot}
+                disabled={autoPilotStatus?.enabled}
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg disabled:opacity-50"
+              >
+                ▶️ Enable Auto-Pilot
+              </button>
+              <button
+                onClick={disableAutoPilot}
+                disabled={!autoPilotStatus?.enabled}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg disabled:opacity-50"
+              >
+                ⏹️ Disable Auto-Pilot
+              </button>
+            </div>
+          </div>
+
+          {/* Health Check */}
+          <div className="bg-gray-800 rounded-lg p-6">
+            <h3 className="text-lg font-bold mb-4">🩺 Health Check</h3>
+            <button
+              onClick={runHealthCheck}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg mb-4"
+            >
+              🔍 Run Health Check
+            </button>
+
+            {healthStatus && (
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <span className={`w-3 h-3 rounded-full ${healthStatus.database === 'healthy' ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                  <span>Database: {healthStatus.database}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className={`w-3 h-3 rounded-full ${healthStatus.credentials_status === 'ok' ? 'bg-green-500' : 'bg-yellow-500'}`}></span>
+                  <span>Credentials: {healthStatus.credentials_status}</span>
+                </div>
+                <div className="mt-2">
+                  <p className="text-sm text-gray-400">Loaded Platforms:</p>
+                  <p className="text-gray-300">{healthStatus.credentials_loaded.join(', ') || 'None'}</p>
+                </div>
+                <p className="text-xs text-gray-500 mt-2">Last check: {new Date(healthStatus.timestamp).toLocaleString()}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Intervals */}
+          <div className="bg-gray-800 rounded-lg p-6">
+            <h3 className="text-lg font-bold mb-4">⏱️ Intervals</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Order Polling Interval (seconds)</label>
+                <div className="flex space-x-2">
+                  <input
+                    type="number"
+                    value={orderPollingInterval}
+                    onChange={(e) => setOrderPollingInterval(parseInt(e.target.value) || 300)}
+                    className="flex-1 bg-gray-700 rounded px-4 py-2"
+                    min="60"
+                    max="3600"
+                  />
+                  <button
+                    onClick={updateOrderPollingInterval}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg"
+                  >
+                    Save
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">Default: 300s (5 min). Min: 60s</p>
+              </div>
+
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Inventory Sync Interval (seconds)</label>
+                <div className="flex space-x-2">
+                  <input
+                    type="number"
+                    value={inventorySyncInterval}
+                    onChange={(e) => setInventorySyncInterval(parseInt(e.target.value) || 3600)}
+                    className="flex-1 bg-gray-700 rounded px-4 py-2"
+                    min="300"
+                    max="86400"
+                  />
+                  <button
+                    onClick={updateInventorySyncInterval}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg"
+                  >
+                    Save
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">Default: 3600s (1 hour). Min: 300s</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Manual Actions */}
+          <div className="bg-gray-800 rounded-lg p-6">
+            <h3 className="text-lg font-bold mb-4">📤 Manual Actions</h3>
+            <div className="flex flex-wrap gap-4">
+              <button
+                onClick={sendDailyReport}
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg"
+              >
+                📊 Send Daily Report
+              </button>
+              <button
+                onClick={loadAutoPilotStatus}
+                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg"
+              >
+                🔄 Refresh Status
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Updates Tab */}
+      {activeSettingsTab === 'updates' && (
+        <div className="space-y-4">
+          <div className="bg-gray-800 rounded-lg p-6">
+            <h3 className="text-lg font-bold mb-4">🔄 App Updates</h3>
+            <p className="text-gray-400 mb-4">Current Version: {appVersion}</p>
+            
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={checkForUpdates}
+                disabled={updateStatus === 'checking'}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50"
+              >
+                {updateStatus === 'checking' ? 'Checking...' : 'Check for Updates'}
+              </button>
+              
+              {updateStatus === 'available' && (
+                <button className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg">
+                  Download & Install
+                </button>
+              )}
+            </div>
+
+            {updateStatus === 'idle' && (
+              <p className="text-green-400 mt-4">✓ You're up to date!</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* About Tab */}
+      {activeSettingsTab === 'about' && (
+        <div className="bg-gray-800 rounded-lg p-6">
+          <h3 className="text-xl font-bold mb-4">🤖 GLOWASIA Copilot</h3>
+          <p className="text-gray-400 mb-2">Version: {appVersion}</p>
+          <p className="text-gray-400 mb-4">100% Auto-Pilot Dropshipping for ASEAN Market</p>
+          <div className="space-y-2 text-gray-300">
+            <p>• Automated order processing</p>
+            <p>• Multi-platform integration</p>
+            <p>• CJ Dropshipping auto-fulfillment</p>
+            <p>• Telegram notifications</p>
+            <p>• Health monitoring</p>
+            <p>• Daily reports</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
