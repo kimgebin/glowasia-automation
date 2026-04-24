@@ -21,6 +21,11 @@ interface Stats {
   revenue_today: number;
   shipped_today: number;
   delivered_today: number;
+  paypal_balance?: number;
+  midtrans_balance?: number;
+  shopify_balance?: number;
+  cj_pending_orders?: number;
+  gmail_unread?: number;
 }
 
 export default function Dashboard({ status, onNavigate }: DashboardProps & { onNavigate?: (tab: string) => void }) {
@@ -28,22 +33,37 @@ export default function Dashboard({ status, onNavigate }: DashboardProps & { onN
     orders_today: 0,
     revenue_today: 0,
     shipped_today: 0,
-    delivered_today: 0
+    delivered_today: 0,
+    paypal_balance: 0,
+    midtrans_balance: 0,
+    shopify_balance: 0,
+    cj_pending_orders: 0,
+    gmail_unread: 0,
   });
+  const [productCount, setProductCount] = useState(0);
+  const [loading, setLoading] = useState(true);
   const [automationActive, setAutomationActive] = useState(false);
 
   useEffect(() => {
-    loadStats();
+    const loadAll = async () => {
+      try {
+        const [statsData, count] = await Promise.all([
+          invoke<Stats>('get_dashboard_stats').catch(() => null),
+          invoke<number>('get_product_count').catch(() => null),
+        ]);
+        if (statsData) setStats(statsData);
+        if (count !== null) setProductCount(count);
+      } catch (e) {
+        console.error('Load error:', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadAll();
+    // Safety fallback - force loading false after 10s
+    const timeout = setTimeout(() => setLoading(false), 10000);
+    return () => clearTimeout(timeout);
   }, []);
-
-  const loadStats = async () => {
-    try {
-      const data = await invoke<Stats>('get_dashboard_stats');
-      setStats(data);
-    } catch (e) {
-      console.error('Failed to load stats:', e);
-    }
-  };
 
   const startAutomation = async () => {
     try {
@@ -73,8 +93,50 @@ export default function Dashboard({ status, onNavigate }: DashboardProps & { onN
     { name: 'Etsy', connected: status.etsy_connected, icon: '🛍️' },
   ];
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin text-4xl mb-4">⚙️</div>
+          <p className="text-gray-400">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
+      {/* Financial Overview */}
+      <div className="bg-gray-800 rounded-lg p-4">
+        <h3 className="text-lg font-bold mb-4">💰 Financial Overview</h3>
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+          <div className="bg-gray-700 rounded-lg p-3">
+            <p className="text-gray-400 text-xs">💰 PayPal</p>
+            <p className="text-lg font-bold text-green-400">${stats.paypal_balance?.toFixed(2) || '0.00'}</p>
+          </div>
+          <div className="bg-gray-700 rounded-lg p-3">
+            <p className="text-gray-400 text-xs">💳 Midtrans</p>
+            <p className="text-lg font-bold text-green-400">Rp {(stats.midtrans_balance || 0).toLocaleString('id-ID')}</p>
+          </div>
+          <div className="bg-gray-700 rounded-lg p-3">
+            <p className="text-gray-400 text-xs">📊 Shopify</p>
+            <p className="text-lg font-bold text-green-400">${stats.shopify_balance?.toFixed(2) || '0.00'}</p>
+          </div>
+          <div className="bg-gray-700 rounded-lg p-3">
+            <p className="text-gray-400 text-xs">📦 CJ Pending</p>
+            <p className="text-lg font-bold text-yellow-400">{stats.cj_pending_orders || 0}</p>
+          </div>
+          <div className="bg-gray-700 rounded-lg p-3">
+            <p className="text-gray-400 text-xs">📈 Products</p>
+            <p className="text-lg font-bold text-blue-400">{productCount || 0}</p>
+          </div>
+          <div className="bg-gray-700 rounded-lg p-3">
+            <p className="text-gray-400 text-xs">📧 Gmail</p>
+            <p className="text-lg font-bold text-red-400">{stats.gmail_unread || 0}</p>
+          </div>
+        </div>
+      </div>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-4 gap-4">
         <div className="bg-gray-800 rounded-lg p-4">
